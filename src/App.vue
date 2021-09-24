@@ -2,7 +2,8 @@
   <div id="nav">
     <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link> |
-    <router-link to="/raidCards">Raids</router-link>
+    <router-link to="/raidCards">One Raid</router-link> |
+    <router-link to="/raidsOverview">Overview Raids</router-link>
   </div>
   <router-view/>
 </template>

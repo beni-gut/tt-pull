@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div id="raid-select">
+    <div id="raid-select-container">
       <div id="v-model-tier-select" class="raidSelect">
         <span>Tier: </span>
         <select v-model="this.tierMsgIn" @change="this.levelMsgIn=null">
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <RaidCard :tierMsg=this.tierMsgIn :levelMsg=this.levelMsgIn />
+    <RaidCard :raid-details="this.raidDetailsForCard" />
   </div>
 </template>
 
@@ -45,37 +45,63 @@ export default {
         {text: 3, value: '3'},
         {text: 4, value: '4'}
       ],
-      optionsLevel: []
+      optionsLevel: [],
+      raidDetailsForCard: null
     }
   },
   methods: {
-    getRaidLevels() {
+    // get the possible raid levels for the selected raid tier
+    getRaidLevels: function () {
+      //null values
       this.optionsLevel = [];
+      this.raidDetailsForCard = null;
+
+      // if tier is selected, get all possible levels for it
       if (this.tierMsgIn !== null) {
         json.forEach(
             x => {
-              if (x.tier === this.tierMsgIn) {
+              if (x["tier"] === this.tierMsgIn) {
                 this.optionsLevel.push({text: x["level"], value: x["level"]});
               }
             }
         );
-        //console.log(this.optionsLevel);
         this.levelSelectDisabled = false;
+      }
+    },
+    // get the details of the selected raid
+    getRaidCardDetails: function () {
+      if (this.tierMsgIn !== null && this.levelMsgIn !== null) {
+        json.forEach(
+            x => {
+              if (x["tier"] === this.tierMsgIn && x["level"] === this.levelMsgIn) {
+                this.raidDetailsForCard = x;
+              }
+            }
+        );
       }
     }
   },
-  beforeUpdate: function () {
-    this.getRaidLevels()
+  // watch the two selects for changes
+  watch: {
+    tierMsgIn: function () {
+      this.getRaidLevels();
+    },
+    levelMsgIn: function () {
+      this.getRaidCardDetails();
+    }
   }
 }
 
 </script>
 
 <style>
-#raid-select {
+/* containers of selects at top of page */
+#raid-select-container {
   display: flex;
   justify-content: center;
 }
+
+/* select container */
 .raidSelect {
   font-family: sans-serif;
   border: 1px solid #eee;
@@ -87,10 +113,10 @@ export default {
   overflow-x: auto;
 }
 
+/* set size for select */
 select {
   font-size: 1.5rem;
 }
-
 select > option {
   width: 2em;
   font-size: 1.5rem;

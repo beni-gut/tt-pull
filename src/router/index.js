@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
-import RaidCardOverview from "../views/RaidCardOverview";
+import RaidCardOverview from '../views/RaidCardOverview';
+import OverviewAllRaids from '../views/OverviewAllRaids';
 
 const routes = [
   {
@@ -20,6 +21,11 @@ const routes = [
     path: '/raidCards',
     name: 'Raids',
     component: RaidCardOverview
+  },
+  {
+    path: '/raidsOverview',
+    name: 'Overview Raids',
+    component: OverviewAllRaids
   }
 ]
 
