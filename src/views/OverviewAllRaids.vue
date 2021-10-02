@@ -1,10 +1,14 @@
 <template>
   <div class="home">
+    <div>
+      <p class="information">Show all raids between the selected "Start" and "End" values</p>
+    </div>
 
+    <!-- Start value select -->
     <div id="raid-start-end-select-container">
       <div class="raid-select-container">
-        <h1>Start</h1>
-        <div id="v-model-tier-select-start" class="raidSelect">
+        <p class="select-title">Start</p>
+        <div class="raidSelect">
           <span>Tier: </span>
           <select v-model="this.tierMsgStart" @change="this.levelMsgStart=null">
             <option v-for="option in optionsTier" :value="option.value" :key="option">
@@ -12,7 +16,7 @@
             </option>
           </select>
         </div>
-        <div id="v-model-level-select" class="raidSelect">
+        <div class="raidSelect">
           <span>Level: </span>
           <select v-model="this.levelMsgStart" :disabled=this.levelSelectStartDisabled >
             <option v-for="option in optionsLevelStart" :value="option.value" :key="option">
@@ -22,9 +26,12 @@
         </div>
       </div>
 
-      <div class="raid-select-container">
-        <h1>End</h1>
-        <div id="v-model-tier-select-end" class="raidSelect">
+      <div id="select-separator"></div>
+
+      <!-- End value select -->
+      <div id="raid-select-end" class="raid-select-container">
+        <p class="select-title">End</p>
+        <div class="raidSelect">
           <span>Tier: </span>
           <select v-model="this.tierMsgEnd" @change="this.levelMsgEnd=null">
             <option v-for="option in optionsTier" :value="option.value" :key="option">
@@ -32,7 +39,7 @@
             </option>
           </select>
         </div>
-        <div id="v-model-level-select" class="raidSelect">
+        <div class="raidSelect">
           <span>Level: </span>
           <select v-model="this.levelMsgEnd" :disabled=this.levelSelectEndDisabled >
             <option v-for="option in optionsLevelEnd" :value="option.value" :key="option">
@@ -43,16 +50,21 @@
       </div>
     </div>
 
+    <div v-if="isError">
+      <p id="errorMessage">End {{ errorMessage }} must be lower than Start {{ errorMessage }}</p>
+    </div>
+
+    <!-- All raid cards -->
     <RaidCard :raid-details="this.raidDetailsForCard" />
   </div>
 </template>
 
 <script>
 import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed_20210919.json";
+import json from "../json-files/raid_seed_20210926.json";
 
 export default {
-  name: 'Home',
+  name: 'Select number of Raids',
   components: {
     RaidCard
   },
@@ -74,7 +86,9 @@ export default {
       ],
       optionsLevelStart: [],
       optionsLevelEnd: [],
-      raidDetailsForCard: null
+      raidDetailsForCard: null,
+      isError: false,
+      errorMessage: null
     }
   },
   methods: {
@@ -85,38 +99,47 @@ export default {
       this.raidDetailsForCard = null;
 
       // if tier is selected, get all possible levels for it
-      if (this.tierMsgIn !== null) {
+      if (this.tierMsgStart !== null) {
         json.forEach(
             x => {
-              if (x["tier"] === this.tierMsgIn) {
-                this.optionsLevel.push({text: x["level"], value: x["level"]});
+              if (x["tier"] === this.tierMsgStart) {
+                this.optionsLevelStart.push({text: x["level"], value: x["level"]});
               }
             }
         );
-        this.levelSelectDisabled = false;
+        this.levelSelectStartDisabled = false;
       }
     },
-    // get the possible raid levels for the selected raid tier in "start"
+    // get the possible raid levels for the selected raid tier in "end"
     getRaidLevelsEnd: function () {
       //null values
       this.optionsLevelEnd = [];
       this.raidDetailsForCard = null;
 
-      // if tier is selected, get all possible levels for it
-      if (this.tierMsgIn !== null) {
-        json.forEach(
-            x => {
-              if (x["tier"] === this.tierMsgIn) {
-                this.optionsLevel.push({text: x["level"], value: x["level"]});
+      // if tier is selected, check if value is smaller or equal to "Start"
+      if (this.tierMsgEnd !== null) {
+        if (this.tierMsgStart !== null && this.tierMsgEnd >= this.tierMsgStart) {
+          this.isError = false;
+          this.errorMessage = null;
+          // get all possible levels for selected tier it
+          json.forEach(
+              x => {
+                if (x["tier"] === this.tierMsgEnd) {
+                  this.optionsLevelEnd.push({text: x["level"], value: x["level"]});
+                }
               }
-            }
-        );
-        this.levelSelectDisabled = false;
+          );
+          this.levelSelectEndDisabled = false;
+        } else {
+          this.levelSelectEndDisabled = true;
+          this.isError = true;
+          this.errorMessage = "Tier";
+        }
       }
     },
-    // get the details of the selected raid
+    // get the details of all raids between the selected start and end raid
     getRaidCardDetails: function () {
-      if (this.tierMsgIn !== null && this.levelMsgIn !== null) {
+      if (this.tierMsgStart !== null && this.levelMsgStart !== null && this.tierMsgEnd !== null && this.levelMsgEnd !== null) {
         json.forEach(
             x => {
               if (x["tier"] === this.tierMsgIn && x["level"] === this.levelMsgIn) {
@@ -127,12 +150,18 @@ export default {
       }
     }
   },
-  // watch the two selects for changes
+  // watch the two tier and level selects for changes
   watch: {
-    tierMsgIn: function () {
-      this.getRaidLevels();
+    tierMsgStart: function () {
+      this.getRaidLevelsStart();
     },
-    levelMsgIn: function () {
+    tierMsgEnd: function () {
+      this.getRaidLevelsEnd();
+    },
+    levelMsgStart: function () {
+      this.getRaidCardDetails();
+    },
+    levelMsgEnd: function () {
       this.getRaidCardDetails();
     }
   }
@@ -141,24 +170,50 @@ export default {
 </script>
 
 <style>
+.information {
+  font-size: 1.5rem;
+}
+#raid-select-end > h1 {
+  margin: 0;
+}
+#errorMessage {
+  color: red;
+  width: 100%;
+}
+
 /* containers for selects at top of page */
 #raid-start-end-select-container {
   display: flex;
-  justify-content: space-around;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#select-separator {
+  padding: 1.25rem 0 1.25rem 2rem;
+  margin: .5rem 2rem 2rem 0;
+  border-right: 3px solid black;
 }
 .raid-select-container {
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
 }
 
 /* select container */
+.select-title {
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 1.25rem 2rem;
+  margin: 1rem 0 2.5rem 0;
+}
 .raidSelect {
   font-family: sans-serif;
   border: 1px solid #eee;
   border-radius: 2px;
-  padding: 20px 30px;
-  margin-top: 1em;
-  margin-bottom: 40px;
+  padding: 1.25rem 2rem;
+  margin: 1rem 0 2.5rem 0;
   user-select: none;
   overflow-x: auto;
 }
@@ -170,6 +225,48 @@ select {
 select > option {
   width: 2em;
   font-size: 1.5rem;
+}
+
+@media (max-width: 898px) {
+  .select-title, .raidSelect, .information {
+    margin: .5rem 0 1rem 0;
+    font-size: 1rem;
+  }
+  .raid-select-container {
+    width: 100%;
+  }
+  .select-title, .raidSelect {
+    padding: .25rem 1rem;
+  }
+  .raidSelect {
+    padding: 1.25rem .1rem;
+  }
+  #select-separator {
+    width: 60%;
+    padding: 0 0 1rem 0;
+    margin: 1rem 1rem 0 1rem;
+    border-top: 2px solid black;
+    border-right: 0;
+  }
+}
+@media (max-width: 556px) {
+  .select-title, .raidSelect, .information {
+    font-size: 1rem;
+    margin: 0;
+  }
+  #raid-start-end-select-container {
+    margin: 1rem 0;
+  }
+  .raidSelect {
+    padding: 1.25rem .1rem;
+  }
+  #select-separator {
+    width: 100%;
+    padding: 0 0 1rem 0;
+    margin: 1rem 1rem 0 1rem;
+    border-top: 2px solid black;
+    border-right: 0;
+  }
 }
 
 </style>

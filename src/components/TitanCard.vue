@@ -1,8 +1,10 @@
 <template>
   <div class="titanCard">
     <h2 class="titanCard-titanName"><b>Titan:</b> {{ titanName }}</h2>
-    <p><b>Debuff:</b> {{ titanDebuffType }}</p>
+    <p class="titanCard-debuffType"><b>Debuff:</b> {{ titanDebuffType }}</p>
     <p v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
+    <p v-if="hasCurses"><b>Type of Curse:</b> {{ curseType }}</p>
+    <p v-if="hasCurses"><b>Amount of Curse:</b> {{ curseAmount }}</p>
   </div>
 </template>
 
@@ -15,9 +17,11 @@ export default {
   data() {
     return {
       hasCurses: false,
-      cursedParts: "",
       titanName: null,
-      titanDebuffType: null
+      titanDebuffType: null,
+      cursedParts: "",
+      curseType: null,
+      curseAmount: null
     }
   },
   methods: {
@@ -57,7 +61,9 @@ export default {
 
           // if any cursed parts have been found assign the correct description
           if (cursedPartsRaw.length > 0) {
+            this.mapCurseType(titanData["cursed_debuffs"][0]);
             this.mapParts(cursedPartsRaw);
+            this.hasCurses = true;
           }
         }
       })
@@ -97,7 +103,17 @@ export default {
           this.cursedParts += ", ";
         }
       }
-      this.hasCurses = true;
+    },
+    mapCurseType: function (curseDebuff) {
+      switch (curseDebuff["bonus_type"]) {
+        case "BurstDamagePerCurse":
+          this.curseType = "Burst Curse";
+          this.curseAmount = curseDebuff["bonus_amount"];
+          break;
+        case "AfflictedDamagePerCurse":
+          this.curseType = "Affliction Curse";
+          this.curseAmount = curseDebuff["bonus_amount"];
+      }
     }
   },
   beforeMount() {
@@ -125,6 +141,9 @@ p {
     border-bottom: 1px solid black;
     padding: 0;
   }
+  .titanCard:nth-last-of-type(1) {
+    border-bottom: 0;
+  }
 }
 /* on big screens */
 @media (min-width: 1200px) {
@@ -132,6 +151,12 @@ p {
     border: 1px solid blue;
     border-radius: 1em;
     width: calc(95vw / 3);
+  }
+  .titanCard-titanName {
+    border-bottom: 1px solid blue;
+  }
+  .titanCard-debuffType {
+    padding-top: 1rem;
   }
 }
 

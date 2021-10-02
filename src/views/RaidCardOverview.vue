@@ -1,17 +1,17 @@
 <template>
   <div class="home">
     <div id="raid-select-container">
-      <div id="v-model-tier-select" class="raidSelect">
+      <div class="one-raid-select">
         <span>Tier: </span>
-        <select v-model="this.tierMsgIn" @change="this.levelMsgIn=null">
+        <select v-model="this.tierMsg" @change="this.levelMsg=null">
           <option v-for="option in optionsTier" :value="option.value" :key="option">
             {{ option.text }}
           </option>
         </select>
       </div>
-      <div id="v-model-level-select" class="raidSelect">
+      <div class="one-raid-select">
         <span>Level: </span>
-        <select v-model="this.levelMsgIn" :disabled=this.levelSelectDisabled >
+        <select v-model="this.levelMsg" :disabled=this.levelSelectDisabled >
           <option v-for="option in optionsLevel" :value="option.value" :key="option">
             {{ option.text }}
           </option>
@@ -25,17 +25,17 @@
 
 <script>
 import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed_20210919.json";
+import json from "../json-files/raid_seed_20210926.json";
 
 export default {
-  name: 'Home',
+  name: 'Select and Overview one Raid',
   components: {
     RaidCard
   },
   data() {
     return {
-      tierMsgIn: null,
-      levelMsgIn: null,
+      tierMsg: null,
+      levelMsg: null,
       raidBuffType: null,
       raidBuffAmount: null,
       levelSelectDisabled: true,
@@ -57,10 +57,10 @@ export default {
       this.raidDetailsForCard = null;
 
       // if tier is selected, get all possible levels for it
-      if (this.tierMsgIn !== null) {
+      if (this.tierMsg !== null) {
         json.forEach(
             x => {
-              if (x["tier"] === this.tierMsgIn) {
+              if (x["tier"] === this.tierMsg) {
                 this.optionsLevel.push({text: x["level"], value: x["level"]});
               }
             }
@@ -70,10 +70,10 @@ export default {
     },
     // get the details of the selected raid
     getRaidCardDetails: function () {
-      if (this.tierMsgIn !== null && this.levelMsgIn !== null) {
+      if (this.tierMsg !== null && this.levelMsg !== null) {
         json.forEach(
             x => {
-              if (x["tier"] === this.tierMsgIn && x["level"] === this.levelMsgIn) {
+              if (x["tier"] === this.tierMsg && x["level"] === this.levelMsg) {
                 this.raidDetailsForCard = x;
               }
             }
@@ -83,10 +83,10 @@ export default {
   },
   // watch the two selects for changes
   watch: {
-    tierMsgIn: function () {
+    tierMsg: function () {
       this.getRaidLevels();
     },
-    levelMsgIn: function () {
+    levelMsg: function () {
       this.getRaidCardDetails();
     }
   }
@@ -102,13 +102,12 @@ export default {
 }
 
 /* select container */
-.raidSelect {
+.one-raid-select {
   font-family: sans-serif;
   border: 1px solid #eee;
   border-radius: 2px;
-  padding: 20px 30px;
-  margin-top: 1em;
-  margin-bottom: 40px;
+  padding: 1.25rem 2rem;
+  margin: 1rem 0 1.5rem 0;
   user-select: none;
   overflow-x: auto;
 }
@@ -120,6 +119,17 @@ select {
 select > option {
   width: 2em;
   font-size: 1.5rem;
+}
+
+@media (max-width: 556px) {
+  .one-raid-select {
+    margin: .1rem 0 1rem 0;
+  }
+}
+@media (min-width: 1200px) {
+  .one-raid-select {
+    margin: 1rem 0 2.5rem 0;
+  }
 }
 
 </style>

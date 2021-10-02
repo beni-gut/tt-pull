@@ -1,7 +1,7 @@
 <template>
   <div class="raidCards">
-    <h1>Raid: {{ tierMsg }}-{{ levelMsg }}</h1>
-    <div class="raidCards-displayInformation">
+    <h1 v-if="(this.raidDetails !== null)">Raid: {{ tierMsg }}-{{ levelMsg }}</h1>
+    <div v-if="(this.raidDetails !== null)" class="raidCards-displayInformation">
       <ul v-if="hasABuff" id="raidCard-raidBuff">
         <li><b>Buff:</b></li>
         <li>{{ raidBuffType }} {{ raidBuffAmount }}</li>
@@ -17,6 +17,7 @@
     </div>
     <div class="titanContainer">
       <TitanCard v-for="titan in raidTitans" :raidTitan="titan.value" :key="titan.id" />
+      <p v-if="this.raidDetails === null" id="raid-card-placeholder">Select a raid</p>
     </div>
   </div>
 </template>
@@ -134,6 +135,17 @@ li {
   display: flex;
   justify-content: space-between;
 }
+#raid-card-placeholder {
+  margin: 0;
+  height: 1rem;
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: green;
+  text-align: center;
+}
+
 @media (max-width: 1199px) {
   .titanContainer {
     flex-direction: column;

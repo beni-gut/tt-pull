@@ -1,7 +1,6 @@
 <template>
   <div id="nav">
     <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link> |
     <router-link to="/raidCards">One Raid</router-link> |
     <router-link to="/raidsOverview">Overview Raids</router-link>
   </div>
@@ -24,15 +23,21 @@ body {
 }
 
 #nav {
-  padding: 30px;
+  padding: 2em 1em;
+  margin: 0;
 }
-
 #nav a {
   font-weight: bold;
   color: #2c3e50;
 }
-
 #nav a.router-link-exact-active {
   color: #42b983;
 }
+
+@media (max-width: 1199px) {
+  #nav {
+    padding: 1em;
+  }
+}
+
 </style>
