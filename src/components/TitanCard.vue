@@ -4,7 +4,7 @@
     <p class="titanCard-debuffType"><b>Debuff:</b> {{ titanDebuffType }}</p>
     <p v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
     <p v-if="hasCurses"><b>Type of Curse:</b> {{ curseType }}</p>
-    <p v-if="hasCurses"><b>Amount of Curse:</b> {{ curseAmount }}</p>
+    <!--<p v-if="hasCurses"><b>Amount of Curse:</b> {{ curseAmount }}</p>-->
   </div>
 </template>
 
