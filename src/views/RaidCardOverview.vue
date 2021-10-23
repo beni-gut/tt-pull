@@ -25,7 +25,7 @@
 
 <script>
 import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed_20211017.json";
+import json from "../json-files/raid_seed_20211024.json";
 
 export default {
   name: 'Select and Overview one Raid',
