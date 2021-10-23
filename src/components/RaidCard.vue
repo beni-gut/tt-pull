@@ -76,7 +76,7 @@ export default {
           this.raidBaseHealthPoints = titans[0]["total_hp"].toLocaleString();
           titans.forEach(
               x => {
-                this.raidTitans.push({ id: x["enemy_id"], value: x });
+                this.raidTitans.push({ id: (x["enemy_id"] + "_" + x["total_hp"]), value: x });
               }
           )
 
