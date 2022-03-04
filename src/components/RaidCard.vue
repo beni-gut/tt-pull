@@ -4,15 +4,29 @@
     <div v-if="(this.raidDetails !== null)" class="raidCards-displayInformation">
       <ul v-if="hasABuff" id="raidCard-raidBuff">
         <li><b>Buff:</b></li>
-        <li>{{ raidBuffType }} {{ raidBuffAmount }}</li>
+        <li>{{ raidBuff }}</li>
       </ul>
       <ul id="raidCard-raidHP">
-        <li><b>Base HP:</b></li>
-        <li>{{ raidBaseHealthPoints }}</li>
+        <li><b>Number of titans:</b></li>
+        <li>{{ numberOfTitans }}</li>
       </ul>
       <ul id="raidCard-raidSequence">
         <li><b>Sequence:</b></li>
         <li>{{ raidSequence }}</li>
+      </ul>
+    </div>
+    <div v-if="(this.raidDetails !== null)" class="raidCards-displayInformation">
+      <ul v-if="(this.$props.averageDamage !== null)">
+        <li><b>Average damage:</b></li>
+        <li>{{ this.$props.averageDamage.toLocaleString("en") }}</li>
+      </ul>
+      <ul>
+        <li><b>Total damage needed to finish:</b></li>
+        <li>{{ totalHPNeededString }}</li>
+      </ul>
+      <ul v-if="(this.cyclesNeeded !== null)">
+        <li><b>Cycles needed:</b></li>
+        <li>{{ cyclesNeeded }}</li>
       </ul>
     </div>
     <div class="titanContainer">
@@ -24,23 +38,28 @@
 
 <script>
 import TitanCard from "./TitanCard";
+import mapBuffDebuff from "./mapBuffDebuff";
+import neededParts from "../components/neededParts";
 
 export default {
   name: 'RaidCard',
   components: {TitanCard},
   props: {
-    raidDetails: Object
+    raidDetails: Object,
+    averageDamage: Number
   },
   data() {
     return {
       tierMsg: null,
       levelMsg: null,
       hasABuff: false,
-      raidBuffType: null,
-      raidBuffAmount: null,
+      raidBuff: null,
       raidSequence: null,
-      raidBaseHealthPoints: null,
-      raidTitans: []
+      numberOfTitans: null,
+      raidTitans: [],
+      totalHPNeededString: null,
+      totalHPNeededNumber: null,
+      cyclesNeeded: null
     }
   },
   methods: {
@@ -52,11 +71,12 @@ export default {
           this.tierMsg = null;
           this.levelMsg = null;
           this.hasABuff = false;
-          this.raidBuffType = null;
-          this.raidBuffAmount = null;
+          this.raidBuff = null;
           this.raidSequence = null;
-          this.raidBaseHealthPoints = null;
+          this.numberOfTitans = null;
           this.raidTitans = [];
+          this.totalHPNeededString = null;
+          this.cyclesNeeded = null;
         }
 
         // if values present, get values
@@ -68,14 +88,29 @@ export default {
           this.tierMsg = raidDetailsRaw["tier"];
           this.levelMsg = raidDetailsRaw["level"];
 
+          // get titan sequence
+          let raidSequence = [];
+          raidDetailsRaw["spawn_sequence"].forEach(
+              x => {
+                raidSequence.push(x);
+              }
+          )
+
           // set titan sequence
-          this.raidSequence = raidDetailsRaw["spawn_sequence"].toString().replaceAll(",", ", ");
+          this.raidSequence = raidSequence.toString().replaceAll(",", ", ");
+
+          // set number of titans
+          this.numberOfTitans = raidSequence.length;
 
           // get titans and their respective details
           let titans = raidDetailsRaw["titans"];
-          this.raidBaseHealthPoints = titans[0]["total_hp"].toLocaleString();
+          let titanHPNameMap = new Map();
           titans.forEach(
               x => {
+                let lowestDamageNeededStrategy = neededParts.neededPartsForKill(x["total_hp"], x["parts"]);
+                //console.log(lowestDamageNeededStrategy);
+                x["bestStrategy"] = lowestDamageNeededStrategy;
+                titanHPNameMap.set(x["enemy_name"], lowestDamageNeededStrategy[1]);
                 this.raidTitans.push({ id: (x["enemy_id"] + "_" + x["total_hp"]), value: x });
               }
           )
@@ -85,16 +120,53 @@ export default {
             let buff = raidDetailsRaw["area_buffs"];
             buff.forEach(
                 x => {
-                  this.raidBuffType = x["bonus_type"] + ", ";
-                  this.raidBuffAmount = x["bonus_amount"];
+                  let raidBuffType = x["bonus_type"];
+                  let raidBuffAmount = x["bonus_amount"];
+                  this.raidBuff = mapBuffDebuff.mapBuffType(raidBuffType, raidBuffAmount);
                   this.hasABuff = true;
                 }
             )
           } catch (error) {
             this.hasABuff = false;
-            this.raidBuffType = "none";
-            this.raidBuffAmount = null;
+            this.raidBuff = "none";
           }
+
+          // set the total HP and AP needed for all titans
+          //console.log("titanHPNameMap:")
+          //console.log(titanHPNameMap)
+          let totalHPNeeded = null;
+          raidSequence.forEach(
+              x => {
+                let hp = titanHPNameMap.get(x);
+                totalHPNeeded += hp;
+                //console.log(hp.toLocaleString("en"));
+              }
+          )
+          this.totalHPNeededString = totalHPNeeded.toLocaleString("en");
+          this.totalHPNeededNumber = totalHPNeeded;
+          if (this.averageDamage !== null) {
+            this.updateCyclesNeeded();
+          }
+
+          //console.log("totalHPNeeded: " + totalHPNeeded.toLocaleString("en"))
+        }
+      })
+    },
+    updateCyclesNeeded: function () {
+      this.$nextTick(function () {
+        // set cycles null if no average is given yet
+        if (this.averageDamage === null) {
+          this.cyclesNeeded = null;
+        }
+
+        // calculate cycles needed if average is given
+        if (this.averageDamage !== null && this.totalHPNeededNumber !== null) {
+          let averageDamage = this.averageDamage;
+          let totalHPNeeded = this.totalHPNeededNumber;
+          // cycles needed is the totalHP divided by the number of people in the clan times attacks times average damage per attack
+          let cyclesNeededCalc = Math.ceil(totalHPNeeded/(49*5*averageDamage));
+          //console.log(cyclesNeededCalc.toLocaleString("en"));
+          this.cyclesNeeded = cyclesNeededCalc;
         }
       })
     }
@@ -102,6 +174,9 @@ export default {
   watch: {
     raidDetails: function () {
       this.updateData();
+    },
+    averageDamage: function () {
+      this.updateCyclesNeeded();
     }
   }
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div id="raid-select-container">
+    <div class="raid-select-container">
       <div class="one-raid-select">
         <span>Tier: </span>
         <select v-model="this.tierMsg" @change="this.levelMsg=null">
@@ -18,14 +18,24 @@
         </select>
       </div>
     </div>
+    <div class="raid-select-container">
+      <div class="one-raid-select">
+        <span>Average Damage per Attack: </span>
+        <input type="number" min="0" placeholder="12000000" v-model="this.inputAverageDamage" />
+      </div>
+      <div class="one-raid-select">
+        <span>Clan Members: </span>
+        <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembers" />
+      </div>
+    </div>
 
-    <RaidCard :raid-details="this.raidDetailsForCard" />
+    <RaidCard :raid-details="this.raidDetailsForCard" :average-damage="this.outputAverageDamage" />
   </div>
 </template>
 
 <script>
 import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed_20211024.json";
+import json from "../json-files/raid_seed.json";
 
 export default {
   name: 'Select and Overview one Raid',
@@ -46,7 +56,10 @@ export default {
         {text: 4, value: '4'}
       ],
       optionsLevel: [],
-      raidDetailsForCard: null
+      raidDetailsForCard: null,
+      inputAverageDamage: null,
+      outputAverageDamage: null,
+      clanMembers: 50
     }
   },
   methods: {
@@ -79,15 +92,26 @@ export default {
             }
         );
       }
+    },
+    // avg-dmg input turns to "string" if empty, check and set average damage output to raidCard null if true
+    setAverageDamageRaidCard: function () {
+      if (typeof this.inputAverageDamage === "string") {
+        this.outputAverageDamage = null;
+      } else {
+        this.outputAverageDamage = this.inputAverageDamage;
+      }
     }
   },
-  // watch the two selects for changes
+  // watch the two selects and the input for changes
   watch: {
     tierMsg: function () {
       this.getRaidLevels();
     },
     levelMsg: function () {
       this.getRaidCardDetails();
+    },
+    inputAverageDamage: function () {
+      this.setAverageDamageRaidCard();
     }
   }
 }
@@ -96,7 +120,7 @@ export default {
 
 <style>
 /* containers of selects at top of page */
-#raid-select-container {
+.raid-select-container {
   display: flex;
   justify-content: center;
 }
@@ -118,6 +142,9 @@ select {
 }
 select > option {
   width: 2em;
+  font-size: 1.5rem;
+}
+input {
   font-size: 1.5rem;
 }
 

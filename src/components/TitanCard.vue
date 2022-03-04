@@ -1,14 +1,19 @@
 <template>
   <div class="titanCard">
     <h2 class="titanCard-titanName"><b>Titan:</b> {{ titanName }}</h2>
-    <p class="titanCard-debuffType"><b>Debuff:</b> {{ titanDebuffType }}</p>
+    <p class="titanCard-hpAmount"><b>Titan HP:</b> {{ titanHP }}</p>
+    <p><b>Debuff:</b> {{ titanDebuffType }}</p>
     <p v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
-    <p v-if="hasCurses"><b>Type of Curse:</b> {{ curseType }}</p>
-    <!--<p v-if="hasCurses"><b>Amount of Curse:</b> {{ curseAmount }}</p>-->
+    <p v-if="hasCurses"><b>Type of Curse:</b> {{ numberOfCurses }} x {{ curseAmount }} {{ curseType }}</p>
+    <p><b>Best Strategy:</b> {{ bestStrategy }}</p>
+    <p><b>Total Damage Needed:</b> {{ totalDamageNeeded }}</p>
   </div>
 </template>
 
 <script>
+import mapBuffDebuff from "./mapBuffDebuff";
+//import neededParts from "./neededParts";
+
 export default {
   name: 'TitanCard',
   props: {
@@ -18,10 +23,14 @@ export default {
     return {
       hasCurses: false,
       titanName: null,
+      titanHP: null,
       titanDebuffType: null,
       cursedParts: "",
       curseType: null,
-      curseAmount: null
+      curseAmount: null,
+      numberOfCurses: null,
+      bestStrategy: null,
+      totalDamageNeeded: null
     }
   },
   methods: {
@@ -30,14 +39,21 @@ export default {
         if (this.raidTitan !== null) {
           // get the titanData from the props, probably not needed
           let titanData = this.raidTitan;
+          //console.log(titanData);
 
           // set the name of the titan
           this.titanName = titanData["enemy_name"];
 
+          // Get the total HP
+          let titanHPNumber = titanData["total_hp"];
+          this.titanHP = titanHPNumber.toLocaleString("en");
+
           // Get the debuff for the titan
           let debuff;
           try {
-            debuff = titanData["area_debuffs"][0]["bonus_type"];
+            let titanDebuffType = titanData["area_debuffs"][0]["bonus_type"];
+            let titanDebuffAmount = titanData["area_debuffs"][0]["bonus_amount"];
+            debuff = mapBuffDebuff.mapBuffType(titanDebuffType, titanDebuffAmount);
           } catch (e) {
             debuff = "none";
           }
@@ -45,6 +61,15 @@ export default {
 
           // check for cursed parts
           let parts = titanData["parts"];
+
+          // get the best Strategy (out of a select few at the moment)
+          let neededPartsStrategy = titanData["bestStrategy"];
+          //let neededPartsStrategy = neededParts.neededPartsForKill(titanHPNumber, parts);
+          //console.log("TitanCard");
+          //console.log("Strat: " + neededPartsStrategy[0] + ", Total Damage needed" + neededPartsStrategy[1]);
+          this.bestStrategy = neededPartsStrategy[0];
+          this.totalDamageNeeded = neededPartsStrategy[1].toLocaleString("en");
+
           let cursedPartsRaw = [];
           parts.forEach(
               x => {
@@ -70,6 +95,7 @@ export default {
     },
     mapParts: function (cursedPartsRaw) {
       for (let i = 0; i < cursedPartsRaw.length; i++) {
+        this.numberOfCurses += 1;
         // normal switch-case to identify and push respective cursed parts to String
         switch (cursedPartsRaw[i]) {
           case "ArmorHead":
@@ -107,13 +133,19 @@ export default {
     mapCurseType: function (curseDebuff) {
       switch (curseDebuff["bonus_type"]) {
         case "BurstDamagePerCurse":
-          this.curseType = "Burst Curse";
-          this.curseAmount = curseDebuff["bonus_amount"];
+          this.curseType = "All Burst Damage per Curse";
+          this.curseAmount = this.parseCurseAmount(curseDebuff["bonus_amount"]);
           break;
         case "AfflictedDamagePerCurse":
-          this.curseType = "Affliction Curse";
-          this.curseAmount = curseDebuff["bonus_amount"];
+          this.curseType = "All Affliction Damage per Curse";
+          this.curseAmount = this.parseCurseAmount(curseDebuff["bonus_amount"]);
+          break;
       }
+    },
+    parseCurseAmount: function (curseAmountText) {
+      // parsing the number from JSON to a percentage
+      return curseAmountText.toLocaleString("en", {style: "percent", minimumFractionDigits: 0}); // should be fully supported
+      // return (100*parseFloat(curseAmountText).toFixed(2)+"%") // if not fully supported use this
     }
   },
   beforeMount() {
@@ -155,7 +187,7 @@ p {
   .titanCard-titanName {
     border-bottom: 1px solid blue;
   }
-  .titanCard-debuffType {
+  .titanCard-hpAmount {
     padding-top: 1rem;
   }
 }
