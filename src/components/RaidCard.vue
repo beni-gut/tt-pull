@@ -26,7 +26,7 @@
       </ul>
       <ul v-if="(this.cyclesNeeded !== null)">
         <li><b>Cycles needed:</b></li>
-        <li>{{ cyclesNeeded }}</li>
+        <li>&#126;{{ attacksInLastCycle }} attacks into cycle {{ cyclesNeeded }}</li>
       </ul>
     </div>
     <div class="titanContainer">
@@ -46,7 +46,8 @@ export default {
   components: {TitanCard},
   props: {
     raidDetails: Object,
-    averageDamage: Number
+    averageDamage: Number,
+    clanMembers: Number
   },
   data() {
     return {
@@ -59,7 +60,8 @@ export default {
       raidTitans: [],
       totalHPNeededString: null,
       totalHPNeededNumber: null,
-      cyclesNeeded: null
+      cyclesNeeded: null,
+      attacksInLastCycle: null
     }
   },
   methods: {
@@ -77,6 +79,7 @@ export default {
           this.raidTitans = [];
           this.totalHPNeededString = null;
           this.cyclesNeeded = null;
+          this.attacksInLastCycle = null;
         }
 
         // if values present, get values
@@ -85,8 +88,8 @@ export default {
           let raidDetailsRaw = this.raidDetails;
 
           // set tier and level
-          this.tierMsg = raidDetailsRaw["tier"];
-          this.levelMsg = raidDetailsRaw["level"];
+          this.tierMsg = Number(raidDetailsRaw["tier"]);
+          this.levelMsg = Number(raidDetailsRaw["level"]);
 
           // get titan sequence
           let raidSequence = [];
@@ -132,43 +135,56 @@ export default {
           }
 
           // set the total HP and AP needed for all titans
-          //console.log("titanHPNameMap:")
-          //console.log(titanHPNameMap)
           let totalHPNeeded = null;
           raidSequence.forEach(
               x => {
-                let hp = titanHPNameMap.get(x);
-                totalHPNeeded += hp;
-                //console.log(hp.toLocaleString("en"));
+                totalHPNeeded += titanHPNameMap.get(x);
               }
-          )
+          );
           this.totalHPNeededString = totalHPNeeded.toLocaleString("en");
           this.totalHPNeededNumber = totalHPNeeded;
           if (this.averageDamage !== null) {
             this.updateCyclesNeeded();
           }
-
-          //console.log("totalHPNeeded: " + totalHPNeeded.toLocaleString("en"))
         }
       })
     },
     updateCyclesNeeded: function () {
-      this.$nextTick(function () {
-        // set cycles null if no average is given yet
-        if (this.averageDamage === null) {
-          this.cyclesNeeded = null;
+      // set cycles null if no average is given yet
+      if (this.averageDamage === null) {
+        this.cyclesNeeded = null;
+      }
+      if (this.clanMembers === null && this.averageDamage !== null) {
+        this.cyclesNeeded = NaN;
+      }
+
+      // calculate cycles needed if average is given
+      if (this.averageDamage !== null && this.totalHPNeededNumber !== null && this.clanMembers !== null && this.tierMsg !== null) {
+        // set values to calculate
+        let clanMembersNumber = this.clanMembers;
+        let averageDamage = this.averageDamage;
+        let totalHPNeeded = this.totalHPNeededNumber;
+        let attacksPerCycleAndPerson = null;
+
+        // set number of attacks a person can do per cycle according to Raid Tier
+        if (this.tierMsg === 1) {
+          attacksPerCycleAndPerson = 3;
+        } else if (this.tierMsg === 2 || this.tierMsg === 3) {
+          attacksPerCycleAndPerson = 4;
+        } else if (this.tierMsg === 4) {
+          attacksPerCycleAndPerson = 5;
+        } else {
+          attacksPerCycleAndPerson = NaN;
         }
 
-        // calculate cycles needed if average is given
-        if (this.averageDamage !== null && this.totalHPNeededNumber !== null) {
-          let averageDamage = this.averageDamage;
-          let totalHPNeeded = this.totalHPNeededNumber;
-          // cycles needed is the totalHP divided by the number of people in the clan times attacks times average damage per attack
-          let cyclesNeededCalc = Math.ceil(totalHPNeeded/(49*5*averageDamage));
-          //console.log(cyclesNeededCalc.toLocaleString("en"));
-          this.cyclesNeeded = cyclesNeededCalc;
-        }
-      })
+        // cycles needed is the totalHP divided by the number of people in the clan times attacks times average damage per attack
+        let attacksNeeded = totalHPNeeded/averageDamage;
+        let cyclesNeededCalc = Math.ceil(attacksNeeded/(clanMembersNumber*attacksPerCycleAndPerson));
+        this.cyclesNeeded = cyclesNeededCalc;
+
+        // number of attacks made during last cycle until raid is over
+        this.attacksInLastCycle = Math.ceil(attacksNeeded - ((cyclesNeededCalc-1)*clanMembersNumber*attacksPerCycleAndPerson));
+      }
     }
   },
   watch: {
@@ -176,6 +192,9 @@ export default {
       this.updateData();
     },
     averageDamage: function () {
+      this.updateCyclesNeeded();
+    },
+    clanMembers: function () {
       this.updateCyclesNeeded();
     }
   }

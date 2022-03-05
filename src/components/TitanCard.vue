@@ -5,7 +5,7 @@
     <p><b>Debuff:</b> {{ titanDebuffType }}</p>
     <p v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
     <p v-if="hasCurses"><b>Type of Curse:</b> {{ numberOfCurses }} x {{ curseAmount }} {{ curseType }}</p>
-    <p><b>Best Strategy:</b> {{ bestStrategy }}</p>
+    <p><b>Least Damage Needed Strategy:</b> {{ bestStrategy }}</p>
     <p><b>Total Damage Needed:</b> {{ totalDamageNeeded }}</p>
   </div>
 </template>

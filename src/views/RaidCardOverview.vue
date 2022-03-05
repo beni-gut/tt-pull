@@ -25,11 +25,12 @@
       </div>
       <div class="one-raid-select">
         <span>Clan Members: </span>
-        <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembers" />
+        <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembersInput" @input="this.checkClanMembers()" @touchend="this.checkClanMembers()" />
+        <span v-if="this.clanMemberError" class="error-message"> Number of Clan Members must be between 1 and 50</span>
       </div>
     </div>
 
-    <RaidCard :raid-details="this.raidDetailsForCard" :average-damage="this.outputAverageDamage" />
+    <RaidCard :raid-details="this.raidDetailsForCard" :average-damage="this.outputAverageDamage" :clan-members="this.clanMembersOutput" />
   </div>
 </template>
 
@@ -59,7 +60,9 @@ export default {
       raidDetailsForCard: null,
       inputAverageDamage: null,
       outputAverageDamage: null,
-      clanMembers: 50
+      clanMembersInput: 50,
+      clanMembersOutput: 50,
+      clanMemberError: false
     }
   },
   methods: {
@@ -100,6 +103,15 @@ export default {
       } else {
         this.outputAverageDamage = this.inputAverageDamage;
       }
+    },
+    checkClanMembers: function () {
+      if (typeof this.clanMembersInput === "string") {
+        this.clanMembersOutput = null;
+        this.clanMemberError = true;
+      } else {
+        this.clanMemberError = false;
+        this.clanMembersOutput = this.clanMembersInput;
+      }
     }
   },
   // watch the two selects and the input for changes
@@ -123,6 +135,9 @@ export default {
 .raid-select-container {
   display: flex;
   justify-content: center;
+}
+.error-message {
+  color: red;
 }
 
 /* select container */
@@ -151,6 +166,13 @@ input {
 @media (max-width: 556px) {
   .one-raid-select {
     margin: .1rem 0 1rem 0;
+  }
+  .one-raid-select:nth-last-of-type(1) > * {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    vertical-align: middle;
   }
 }
 @media (min-width: 1200px) {
