@@ -12,7 +12,6 @@
 
 <script>
 import mapBuffDebuff from "./mapBuffDebuff";
-//import neededParts from "./neededParts";
 
 export default {
   name: 'TitanCard',
@@ -39,7 +38,6 @@ export default {
         if (this.raidTitan !== null) {
           // get the titanData from the props, probably not needed
           let titanData = this.raidTitan;
-          //console.log(titanData);
 
           // set the name of the titan
           this.titanName = titanData["enemy_name"];
@@ -64,9 +62,6 @@ export default {
 
           // get the best Strategy (out of a select few at the moment)
           let neededPartsStrategy = titanData["bestStrategy"];
-          //let neededPartsStrategy = neededParts.neededPartsForKill(titanHPNumber, parts);
-          //console.log("TitanCard");
-          //console.log("Strat: " + neededPartsStrategy[0] + ", Total Damage needed" + neededPartsStrategy[1]);
           this.bestStrategy = neededPartsStrategy[0];
           this.totalDamageNeeded = neededPartsStrategy[1].toLocaleString("en");
 

@@ -67,7 +67,6 @@ export default {
   methods: {
     updateData: function () {
       this.$nextTick(function () {
-
         // set all values null when info changes
         if (this.raidDetails === null) {
           this.tierMsg = null;
@@ -111,7 +110,6 @@ export default {
           titans.forEach(
               x => {
                 let lowestDamageNeededStrategy = neededParts.neededPartsForKill(x["total_hp"], x["parts"]);
-                //console.log(lowestDamageNeededStrategy);
                 x["bestStrategy"] = lowestDamageNeededStrategy;
                 titanHPNameMap.set(x["enemy_name"], lowestDamageNeededStrategy[1]);
                 this.raidTitans.push({ id: (x["enemy_id"] + "_" + x["total_hp"]), value: x });
@@ -197,6 +195,9 @@ export default {
     clanMembers: function () {
       this.updateCyclesNeeded();
     }
+  },
+  beforeMount() {
+    this.updateData();
   }
 }
 
@@ -223,6 +224,7 @@ li {
 .raidCards {
   border: 2px solid black;
   border-radius: 1em;
+  margin-bottom: 3em;
   /*background-color: rgb(240, 240, 240);*/
 }
 .titanContainer {
