@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div>
-      <p class="information">Show all raids between the selected "Start" and "End" values</p>
+      <p class="information">Shows all raids between the selected "Start" and "End" values</p>
     </div>
 
     <!-- Start value select -->
@@ -50,12 +50,26 @@
       </div>
     </div>
 
+    <!-- Error message if start tier or level is lower than end -->
     <div v-if="isError">
-      <p id="errorMessage">End {{ errorMessage }} must be lower than Start {{ errorMessage }}</p>
+      <p id="errorMessage">End {{ errorMessage }} must be higher or equal to Start {{ errorMessage }}</p>
+    </div>
+
+    <!-- Set damage and members for cycle calcs -->
+    <div class="raid-select-container">
+      <div class="one-raid-select">
+        <span>Average Damage per Attack: </span>
+        <input type="number" min="0" placeholder="12000000" v-model="this.inputAverageDamage" />
+      </div>
+      <div class="one-raid-select">
+        <span>Clan Members: </span>
+        <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembersInput" @input="this.checkClanMembers()" @touchend="this.checkClanMembers()" />
+        <span v-if="this.clanMemberError" class="error-message"> Number of Clan Members must be between 1 and 50</span>
+      </div>
     </div>
 
     <!-- All raid cards -->
-    <RaidCard :raid-details="this.raidDetailsForCard" />
+    <RaidCard v-for="cardDetails in raidDetailsForCard" :raidDetails="cardDetails.value" :averageDamage="this.outputAverageDamage" :clanMembers="this.clanMembersOutput" :key="cardDetails.id" />
   </div>
 </template>
 
@@ -79,78 +93,297 @@ export default {
       levelSelectStartDisabled: true,
       levelSelectEndDisabled: true,
       optionsTier: [
-        {text: 1, value: '1'},
-        {text: 2, value: '2'},
-        {text: 3, value: '3'},
-        {text: 4, value: '4'}
+        {text: '1', value: 1},
+        {text: '2', value: 2},
+        {text: '3', value: 3},
+        {text: '4', value: 4}
       ],
+      // level options for start raid and end raid
       optionsLevelStart: [],
       optionsLevelEnd: [],
-      raidDetailsForCard: null,
+      // details for creating raid cards
+      raidDetailsForCard: [],
+      // error message for start raid higher than end raid
       isError: false,
-      errorMessage: null
+      errorMessage: null,
+      // for calculating average damage
+      inputAverageDamage: null,
+      outputAverageDamage: null,
+      clanMembersInput: 50,
+      clanMembersOutput: 50,
+      clanMemberError: false
     }
   },
   methods: {
-    // get the possible raid levels for the selected raid tier in "start"
+    /**
+     * get the possible raid levels for the selected raid tier in "start"
+     * returns nothing
+     * set error message, depending on what {@link checkRaidTier} returns
+     * set possible raid levels for the start by evoking {@link getLevelForTier}
+     * dis-/enable select for level in "start"
+     */
     getRaidLevelsStart: function () {
       //null values
       this.optionsLevelStart = [];
-      this.raidDetailsForCard = null;
+      this.raidDetailsForCard = [];
 
-      // if tier is selected, get all possible levels for it
-      if (this.tierMsgStart !== null) {
-        json.forEach(
-            x => {
-              if (x["tier"] === this.tierMsgStart) {
-                this.optionsLevelStart.push({text: x["level"], value: x["level"]});
-              }
-            }
-        );
+      // if tier is selected, check that start tier is lower than end tier
+      if (this.checkRaidTier()) {
+        // get all possible levels for selected tier it
+        this.optionsLevelStart = this.getLevelForTier(this.tierMsgStart);
+
+        // enable the level select and delete possible errors
+        this.isError = false;
+        this.errorMessage = null;
         this.levelSelectStartDisabled = false;
+      } else {
+        // disable the level select and set errors
+        this.levelSelectStartDisabled = true;
+        this.isError = true;
+        this.errorMessage = "Tier";
       }
     },
-    // get the possible raid levels for the selected raid tier in "end"
+    /**
+     * get the possible raid levels for the selected raid tier in "end"
+     * returns  nothing
+     * set error message, depending on what {@link checkRaidTier} returns
+     * set possible raid levels for the start by evoking {@link getLevelForTier}
+     * dis-/enable select for level in "end"
+     */
     getRaidLevelsEnd: function () {
       //null values
       this.optionsLevelEnd = [];
-      this.raidDetailsForCard = null;
+      this.raidDetailsForCard = [];
 
       // if tier is selected, check if value is smaller or equal to "Start"
-      if (this.tierMsgEnd !== null) {
-        if (this.tierMsgStart !== null && this.tierMsgEnd >= this.tierMsgStart) {
-          this.isError = false;
-          this.errorMessage = null;
-          // get all possible levels for selected tier it
-          json.forEach(
-              x => {
-                if (x["tier"] === this.tierMsgEnd) {
-                  this.optionsLevelEnd.push({text: x["level"], value: x["level"]});
-                }
-              }
-          );
-          this.levelSelectEndDisabled = false;
-        } else {
-          this.levelSelectEndDisabled = true;
-          this.isError = true;
-          this.errorMessage = "Tier";
-        }
+      if (this.checkRaidTier()) {
+        // get all possible levels for selected tier it
+        this.optionsLevelEnd = this.getLevelForTier(this.tierMsgEnd);
+
+        // enable the level select and delete possible errors
+        this.isError = false;
+        this.errorMessage = null;
+        this.levelSelectEndDisabled = false;
+      } else {
+        // disable the level select and set errors
+        this.levelSelectEndDisabled = true;
+        this.isError = true;
+        this.errorMessage = "Tier";
       }
     },
-    // get the details of all raids between the selected start and end raid
+    /**
+     * comparing tiers, if start is smaller than end
+     * @returns {boolean} which decides if an error message is shown or not in {@link getRaidLevelsStart} and {@link getRaidLevelsEnd}
+     */
+    checkRaidTier: function () {
+      // if both tiers selected, check if start is smaller or equal to end, if so return true (displays no error)
+      if (this.tierMsgStart !== null && this.tierMsgEnd !== null && this.tierMsgStart <= this.tierMsgEnd) {
+        return true;
+      }
+      // if both tiers selected, check if start tier is bigger than end tier, if so return false (displays error message for Tier)
+      else if (this.tierMsgStart !== null && this.tierMsgEnd !== null && this.tierMsgStart > this.tierMsgEnd) {
+        return false;
+      }
+      // if only one tier selected, return true (displays no error)
+      else if (this.tierMsgStart === null || this.tierMsgEnd === null) {
+        return true;
+      }
+    },
+    /**
+     * handles changes to raid level, checking if starting raid is lower than end
+     * returns nothing
+     * set error message, depending on what {@link checkRaidLevel} returns
+     * set details for all raid cards by evoking {@link getRaidCardDetails}
+     */
+    raidLevelHandling: function () {
+      // check if start raid is lower than end raid
+      if (this.checkRaidLevel()) {
+        // if all previous conditions met, delete possible errors and get all raid cards
+        this.isError = false;
+        this.errorMessage = null;
+        this.getRaidCardDetails();
+      } else {
+        // if start > end, set errors
+        this.isError = true;
+        this.errorMessage = "Level";
+      }
+    },
+    /**
+     * comparing levels, if start is smaller than end
+     * @returns {boolean} which decides if an error message is shown or not in {@link raidLevelHandling}
+     */
+    checkRaidLevel: function () {
+      // if both tiers are the same, check if start level is smaller or equal to end level, if so return true (displays no error)
+      if (this.tierMsgStart === this.tierMsgEnd && this.levelMsgStart !== null && this.levelMsgEnd !== null && this.levelMsgStart <= this.levelMsgEnd) {
+        return true;
+      }
+      // if both tiers are the same, check if start level is bigger than end level, if so return false (displays error message for Level)
+      else if (this.tierMsgStart === this.tierMsgEnd && this.levelMsgStart !== null && this.levelMsgEnd !== null && this.levelMsgStart > this.levelMsgEnd) {
+        return false;
+      }
+      // if start tier lower than end tier, and both levels selected, return true (displays no error)
+      else if (this.tierMsgStart < this.tierMsgEnd && this.levelMsgStart !== null && this.levelMsgEnd !== null) {
+        return true;
+      }
+      // if only one level selected, return true (displays no error)
+      else if (this.levelMsgStart === null || this.levelMsgEnd === null) {
+        return true;
+      }
+    },
+    /**
+     * get all levels for the selected tier
+     * evoked by {@link getRaidLevelsStart} and {@link getRaidLevelsEnd}
+     * @param tierMsg {Number} of the tier, from which the raid levels should be retrieved
+     * @returns {Array} containing all the level options
+     */
+    getLevelForTier: function (tierMsg) {
+      let optionsArray = [];
+      json.forEach(
+          x => {
+            if (tierMsg === Number(x["tier"])) {
+              optionsArray.push({text: x["level"], value: Number(x["level"])});
+            }
+          }
+      );
+      return optionsArray;
+    },
+    /**
+     * get the details of all raids between the selected start and end raid
+     * evoked by {@link raidLevelHandling} if start and end raid have no errors
+     */
     getRaidCardDetails: function () {
-      if (this.tierMsgStart !== null && this.levelMsgStart !== null && this.tierMsgEnd !== null && this.levelMsgEnd !== null) {
-        json.forEach(
+      this.raidDetailsForCard = [];
+
+      if (this.tierMsgStart !== null && this.tierMsgEnd !== null && this.levelMsgStart !== null && this.levelMsgEnd !== null && this.isError === false) {
+        let requestedRaids = this.getAllRaidsBetween();
+        requestedRaids.forEach(
             x => {
-              if (x["tier"] === this.tierMsgIn && x["level"] === this.levelMsgIn) {
-                this.raidDetailsForCard = x;
-              }
+              json.forEach(
+                  y => {
+                    if (x["tier"] === Number(y["tier"]) && x["level"] === Number(y["level"])) {
+                      this.raidDetailsForCard.push({id: (y["tier"] + "-" + y["level"]), value: y});
+                    }
+                  }
+              );
             }
         );
       }
+    },
+    getAllRaidsBetween: function () {
+      // if same raid tier is used, use numbers from select
+      if (this.tierMsgStart === this.tierMsgEnd) {
+        let allLevelsSameTier = [];
+        this.optionsLevelStart.forEach(
+            x => {
+              if (this.levelMsgStart <= x["value"] && x["value"] <= this.levelMsgEnd) {
+                allLevelsSameTier.push({tier: this.tierMsgStart, level: x["value"]})
+              }
+            }
+        );
+        return allLevelsSameTier;
+      }
+      // if both tiers are "next to each other" (i.e. 3 and 4) all levels of these will be loaded already, use the numbers from both selects
+      else if (this.tierMsgStart + 1 === this.tierMsgEnd) {
+        let bothTiersLoaded = [];
+        this.optionsLevelStart.forEach(
+            x => {
+              if (this.levelMsgStart <= x["value"]) {
+                bothTiersLoaded.push({tier: this.tierMsgStart, level: x["value"]});
+              }
+            }
+        );
+        this.optionsLevelEnd.forEach(
+            x => {
+              if (x["value"] <= this.levelMsgEnd) {
+                bothTiersLoaded.push({tier: this.tierMsgEnd, level: x["value"]});
+              }
+            }
+        );
+        return bothTiersLoaded;
+      }
+      // if tier 1 and 3 or 2 and 4 are selected, do this
+      else if (this.tierMsgStart + 2 === this.tierMsgEnd) {
+        let threeTierLevels = [];
+        let middleTier = (this.tierMsgStart+1);
+        let middleTierLevels = this.getLevelForTier(middleTier);
+
+        this.optionsLevelStart.forEach(
+            x => {
+              if (this.levelMsgStart <= x["value"]) {
+                threeTierLevels.push({tier: this.tierMsgStart, level: x["value"]});
+              }
+            }
+        );
+        middleTierLevels.forEach(
+            x => {
+              threeTierLevels.push({tier: middleTier, level: x["value"]})
+            }
+        );
+        this.optionsLevelEnd.forEach(
+            x => {
+              if (x["value"] <= this.levelMsgEnd) {
+                threeTierLevels.push({tier: this.tierMsgEnd, level: x["value"]});
+              }
+            }
+        );
+        return threeTierLevels;
+      }
+      // if tier 1 is start and tier 4 end, do this
+      else {
+        let allTierLevels = [];
+        let firstMiddleTier = (this.tierMsgStart+1);
+        let secondMiddleTier = (this.tierMsgStart+2);
+        let firstMiddleTierLevels = this.getLevelForTier(firstMiddleTier);
+        let secondMiddleTierLevels = this.getLevelForTier(secondMiddleTier);
+
+        this.optionsLevelStart.forEach(
+            x => {
+              if (this.levelMsgStart <= x["value"]) {
+                allTierLevels.push({tier: this.tierMsgStart, level: x["value"]});
+              }
+            }
+        );
+        firstMiddleTierLevels.forEach(
+            x => {
+              allTierLevels.push({tier: firstMiddleTier, level: x["value"]})
+            }
+        );
+        secondMiddleTierLevels.forEach(
+            x => {
+              allTierLevels.push({tier: secondMiddleTier, level: x["value"]})
+            }
+        );
+        this.optionsLevelEnd.forEach(
+            x => {
+              if (x["value"] <= this.levelMsgEnd) {
+                allTierLevels.push({tier: this.tierMsgEnd, level: x["value"]});
+              }
+            }
+        );
+        return allTierLevels;
+      }
+    },
+    // avg-dmg input turns to "string" if empty, check and set average damage output to raidCard null if true
+    setAverageDamageRaidCard: function () {
+      if (typeof this.inputAverageDamage === "string") {
+        this.outputAverageDamage = null;
+      } else {
+        this.outputAverageDamage = this.inputAverageDamage;
+      }
+    },
+    checkClanMembers: function () {
+      if (typeof this.clanMembersInput === "string") {
+        this.clanMembersOutput = null;
+        this.clanMemberError = true;
+      } else {
+        this.clanMemberError = false;
+        this.clanMembersOutput = this.clanMembersInput;
+      }
     }
   },
-  // watch the two tier and level selects for changes
+  /**
+   * watch all inputs for changes, namely the two tier and level selects
+   */
   watch: {
     tierMsgStart: function () {
       this.getRaidLevelsStart();
@@ -159,10 +392,13 @@ export default {
       this.getRaidLevelsEnd();
     },
     levelMsgStart: function () {
-      this.getRaidCardDetails();
+      this.raidLevelHandling();
     },
     levelMsgEnd: function () {
-      this.getRaidCardDetails();
+      this.raidLevelHandling();
+    },
+    inputAverageDamage: function () {
+      this.setAverageDamageRaidCard();
     }
   }
 }
