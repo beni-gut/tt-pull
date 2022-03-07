@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '../views/Home.vue';
-import RaidCardOverview from '../views/RaidCardOverview';
-import OverviewAllRaids from '../views/OverviewAllRaids';
+import Home from '@/views/Home.vue';
+import RaidCardOverview from '@/views/RaidCardOverview';
+import OverviewAllRaids from '@/views/OverviewAllRaids';
 
 const routes = [
   {

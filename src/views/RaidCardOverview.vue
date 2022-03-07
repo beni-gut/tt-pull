@@ -35,8 +35,8 @@
 </template>
 
 <script>
-import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed.json";
+import RaidCard from "@/components/RaidCard";
+import { jsonFileNew } from "@/components/json-storage"
 
 export default {
   name: 'Select and Overview one Raid',
@@ -62,7 +62,8 @@ export default {
       outputAverageDamage: null,
       clanMembersInput: 50,
       clanMembersOutput: 50,
-      clanMemberError: false
+      clanMemberError: false,
+      jsonFileNew
     }
   },
   methods: {
@@ -72,9 +73,10 @@ export default {
       this.optionsLevel = [];
       this.raidDetailsForCard = null;
 
+      console.log(jsonFileNew)
       // if tier is selected, get all possible levels for it
       if (this.tierMsg !== null) {
-        json.forEach(
+        jsonFileNew.json.forEach(
             x => {
               if (x["tier"] === this.tierMsg) {
                 this.optionsLevel.push({text: x["level"], value: x["level"]});
@@ -87,7 +89,7 @@ export default {
     // get the details of the selected raid
     getRaidCardDetails: function () {
       if (this.tierMsg !== null && this.levelMsg !== null) {
-        json.forEach(
+        jsonFileNew.json.forEach(
             x => {
               if (x["tier"] === this.tierMsg && x["level"] === this.levelMsg) {
                 this.raidDetailsForCard = x;

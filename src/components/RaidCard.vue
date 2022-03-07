@@ -39,7 +39,7 @@
 <script>
 import TitanCard from "./TitanCard";
 import mapBuffDebuff from "./mapBuffDebuff";
-import neededParts from "../components/neededParts";
+import neededParts from "@/components/neededParts";
 
 export default {
   name: 'RaidCard',

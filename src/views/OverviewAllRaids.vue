@@ -74,8 +74,8 @@
 </template>
 
 <script>
-import RaidCard from "../components/RaidCard";
-import json from "../json-files/raid_seed.json";
+import RaidCard from "@/components/RaidCard";
+import { jsonFileNew } from "@/components/json-storage";
 
 export default {
   name: 'Select number of Raids',
@@ -238,7 +238,7 @@ export default {
      */
     getLevelForTier: function (tierMsg) {
       let optionsArray = [];
-      json.forEach(
+      jsonFileNew.json.forEach(
           x => {
             if (tierMsg === Number(x["tier"])) {
               optionsArray.push({text: x["level"], value: Number(x["level"])});
@@ -258,7 +258,7 @@ export default {
         let requestedRaids = this.getAllRaidsBetween();
         requestedRaids.forEach(
             x => {
-              json.forEach(
+              jsonFileNew.json.forEach(
                   y => {
                     if (x["tier"] === Number(y["tier"]) && x["level"] === Number(y["level"])) {
                       this.raidDetailsForCard.push({id: (y["tier"] + "-" + y["level"]), value: y});
