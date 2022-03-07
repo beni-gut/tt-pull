@@ -73,7 +73,6 @@ export default {
       this.optionsLevel = [];
       this.raidDetailsForCard = null;
 
-      console.log(jsonFileNew)
       // if tier is selected, get all possible levels for it
       if (this.tierMsg !== null) {
         jsonFileNew.json.forEach(

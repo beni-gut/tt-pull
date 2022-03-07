@@ -54,6 +54,7 @@ export default {
          *    6 part (No Legs)
          *    5 part (No Legs and No Torso)
          *    5 part (No Legs and No Head)
+         * only the armour points are relevant, as HP always stays the same for each strategy
          * @type {Map<any, any>} String: Strategy, Number: TotalDmgNeeded
          */
         let differentStrategies = new Map();
@@ -85,8 +86,6 @@ export default {
         }
 
         // get the Strategy with the least amount of damage needed to kill and return it
-        let bestStrategy = [...differentStrategies.entries()].reduce((a, e ) => e[1] < a[1] ? e : a);
-        //console.log(bestStrategy);
-        return bestStrategy
+        return [...differentStrategies.entries()].reduce((a, e) => e[1] < a[1] ? e : a);
     }
 }
