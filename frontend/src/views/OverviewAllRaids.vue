@@ -1,14 +1,10 @@
 <template>
-  <div class="home">
-    <div>
-      <p class="information">Shows all raids between the selected "Start" and "End" values</p>
-    </div>
-
+  <div>
     <!-- Start value select -->
     <div id="raid-start-end-select-container">
       <div class="raid-select-container">
         <p class="select-title">Start</p>
-        <div class="raidSelect">
+        <div class="one-raid-select">
           <span>Tier: </span>
           <select v-model="this.tierMsgStart" @change="this.levelMsgStart=null">
             <option v-for="option in optionsTier" :value="option.value" :key="option">
@@ -16,7 +12,7 @@
             </option>
           </select>
         </div>
-        <div class="raidSelect">
+        <div class="one-raid-select">
           <span>Level: </span>
           <select v-model="this.levelMsgStart" :disabled=this.levelSelectStartDisabled >
             <option v-for="option in optionsLevelStart" :value="option.value" :key="option">
@@ -31,7 +27,7 @@
       <!-- End value select -->
       <div id="raid-select-end" class="raid-select-container">
         <p class="select-title">End</p>
-        <div class="raidSelect">
+        <div class="one-raid-select">
           <span>Tier: </span>
           <select v-model="this.tierMsgEnd" @change="this.levelMsgEnd=null">
             <option v-for="option in optionsTier" :value="option.value" :key="option">
@@ -39,7 +35,7 @@
             </option>
           </select>
         </div>
-        <div class="raidSelect">
+        <div class="one-raid-select">
           <span>Level: </span>
           <select v-model="this.levelMsgEnd" :disabled=this.levelSelectEndDisabled >
             <option v-for="option in optionsLevelEnd" :value="option.value" :key="option">
@@ -55,13 +51,13 @@
       <p id="errorMessage">End {{ errorMessage }} must be higher or equal to Start {{ errorMessage }}</p>
     </div>
 
-    <!-- Set damage and members for cycle calcs -->
+    <!-- Average Damage and Clan Member Input -->
     <div class="raid-select-container">
-      <div class="one-raid-select">
+      <div class="one-raid-input">
         <span>Average Damage per Attack: </span>
         <input type="number" min="0" placeholder="12000000" v-model="this.inputAverageDamage" />
       </div>
-      <div class="one-raid-select">
+      <div class="one-raid-input">
         <span>Clan Members: </span>
         <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembersInput" @input="this.checkClanMembers()" @touchend="this.checkClanMembers()" />
         <span v-if="this.clanMemberError" class="error-message"> Number of Clan Members must be between 1 and 50</span>
@@ -75,7 +71,7 @@
 
 <script>
 import RaidCard from "@/components/RaidCard";
-import { jsonFileNew } from "@/components/json-storage";
+import { jsonFileNew } from "@/storage/json-storage";
 
 export default {
   name: 'Select number of Raids',
@@ -111,7 +107,8 @@ export default {
       outputAverageDamage: null,
       clanMembersInput: 50,
       clanMembersOutput: 50,
-      clanMemberError: false
+      clanMemberError: false,
+      jsonFileNew
     }
   },
   methods: {
@@ -406,9 +403,6 @@ export default {
 </script>
 
 <style>
-.information {
-  font-size: 1.5rem;
-}
 #raid-select-end > h1 {
   margin: 0;
 }
@@ -426,7 +420,7 @@ export default {
 }
 #select-separator {
   padding: 1.25rem 0 1.25rem 2rem;
-  margin: .5rem 2rem 2rem 0;
+  margin: .5rem 2rem 0 0;
   border-right: 3px solid black;
 }
 .raid-select-container {
@@ -439,10 +433,10 @@ export default {
 
 /* select container */
 .select-title {
-  font-size: 2rem;
+  font-size: 1.25rem;
   font-weight: bold;
   padding: 1.25rem 2rem;
-  margin: 1rem 0 2.5rem 0;
+  margin: 1rem 0 0 0;
 }
 .raidSelect {
   font-family: sans-serif;
@@ -463,7 +457,7 @@ select > option {
   font-size: 1.5rem;
 }
 
-@media (max-width: 898px) {
+@media (max-width: 991px) {
   .select-title, .raidSelect, .information {
     margin: .5rem 0 1rem 0;
     font-size: 1rem;
@@ -485,7 +479,7 @@ select > option {
     border-right: 0;
   }
 }
-@media (max-width: 556px) {
+@media (max-width: 575px) {
   .select-title, .raidSelect, .information {
     font-size: 1rem;
     margin: 0;

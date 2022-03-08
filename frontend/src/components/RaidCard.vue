@@ -225,7 +225,6 @@ li {
   border: 2px solid black;
   border-radius: 1em;
   margin-bottom: 3em;
-  /*background-color: rgb(240, 240, 240);*/
 }
 .titanContainer {
   display: flex;
@@ -242,13 +241,13 @@ li {
   text-align: center;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 991px) {
   .titanContainer {
     flex-direction: column;
     padding: 0;
   }
 }
-@media (min-width: 1200px) {
+@media (min-width: 992px) {
   .titanContainer {
     flex-direction: row;
     padding: 1rem calc(5vw / 6);

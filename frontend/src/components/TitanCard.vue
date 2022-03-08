@@ -1,12 +1,12 @@
 <template>
   <div class="titanCard">
     <h2 class="titanCard-titanName"><b>Titan:</b> {{ titanName }}</h2>
-    <p class="titanCard-hpAmount"><b>Titan HP:</b> {{ titanHP }}</p>
-    <p><b>Debuff:</b> {{ titanDebuffType }}</p>
-    <p v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
-    <p v-if="hasCurses"><b>Type of Curse:</b> {{ numberOfCurses }} x {{ curseAmount }} {{ curseType }}</p>
-    <p><b>Least Damage Needed Strategy:</b> {{ bestStrategy }}</p>
-    <p><b>Total Damage Needed:</b> {{ totalDamageNeeded }}</p>
+    <p class="titanCard-hpAmount titanCard-info"><b>Titan HP:</b> {{ titanHP }}</p>
+    <p class="titanCard-info"><b>Debuff:</b> {{ titanDebuffType }}</p>
+    <p class="titanCard-info" v-if="hasCurses"><b>Cursed Parts:</b> {{ cursedParts }}</p>
+    <p class="titanCard-info" v-if="hasCurses"><b>Curse:</b> {{ numberOfCurses }} x {{ curseAmount }} {{ curseType }}</p>
+    <p class="titanCard-strategy"><b>Least damage needed strategy:</b> {{ bestStrategy }}</p>
+    <p><b>Total damage needed:</b> {{ totalDamageNeeded }}</p>
   </div>
 </template>
 
@@ -92,6 +92,7 @@ export default {
       for (let i = 0; i < cursedPartsRaw.length; i++) {
         this.numberOfCurses += 1;
         // normal switch-case to identify and push respective cursed parts to String
+        // \xa0 is a non-breaking space
         switch (cursedPartsRaw[i]) {
           case "ArmorHead":
             this.cursedParts += "Head";
@@ -100,22 +101,22 @@ export default {
             this.cursedParts += "Torso";
             break;
           case "ArmorArmUpperRight":
-            this.cursedParts += "Left Shoulder";
+            this.cursedParts += "Left\xa0Shoulder";
             break;
           case "ArmorArmUpperLeft":
-            this.cursedParts += "Right Shoulder";
+            this.cursedParts += "Right\xa0Shoulder";
             break;
           case "ArmorHandRight":
-            this.cursedParts += "Left Hand";
+            this.cursedParts += "Left\xa0Hand";
             break;
           case "ArmorHandLeft":
-            this.cursedParts += "Right Hand";
+            this.cursedParts += "Right\xa0Hand";
             break;
           case "ArmorLegUpperRight":
-            this.cursedParts += "Left Leg";
+            this.cursedParts += "Left\xa0Leg";
             break;
           case "ArmorLegUpperLeft":
-            this.cursedParts += "Right Leg";
+            this.cursedParts += "Right\xa0Leg";
             break;
         }
 
@@ -161,29 +162,48 @@ p {
   margin: 0;
   padding: 0 0 1rem 0;
 }
+.titanCard-info {
+  margin: 0 .3rem 0 .3rem;
+}
+
+.titanCard-strategy {
+  padding: 1rem 0 1rem 0;
+  border-top: 1px solid blue;
+}
 
 /* on small screens */
-@media (max-width: 1199px) {
+@media (max-width: 991px) {
   .titanCard {
     border-bottom: 1px solid black;
     padding: 0;
+    margin: 0 .1rem 0 .1rem;
   }
   .titanCard:nth-last-of-type(1) {
     border-bottom: 0;
   }
+  .titanCard-strategy {
+    border-top: 1px solid black;
+  }
 }
 /* on big screens */
-@media (min-width: 1200px) {
+@media (min-width: 992px) {
   .titanCard {
     border: 1px solid blue;
     border-radius: 1em;
     width: calc(95vw / 3);
+    margin: 0 .1rem 0 .1rem;
   }
   .titanCard-titanName {
     border-bottom: 1px solid blue;
   }
   .titanCard-hpAmount {
     padding-top: 1rem;
+    margin: 0 .2rem 0 .2rem;
+  }
+}
+@media (min-width: 992px) {
+  .titanCard {
+    margin: 0 .3rem 0 .3rem;
   }
 }
 

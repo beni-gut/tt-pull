@@ -1,5 +1,6 @@
 <template>
-  <div class="home">
+  <div>
+    <!-- Raid Tier and Level Select -->
     <div class="raid-select-container">
       <div class="one-raid-select">
         <span>Tier: </span>
@@ -18,12 +19,14 @@
         </select>
       </div>
     </div>
+
+    <!-- Average Damage and Clan Member Input -->
     <div class="raid-select-container">
-      <div class="one-raid-select">
+      <div class="one-raid-input">
         <span>Average Damage per Attack: </span>
         <input type="number" min="0" placeholder="12000000" v-model="this.inputAverageDamage" />
       </div>
-      <div class="one-raid-select">
+      <div class="one-raid-input">
         <span>Clan Members: </span>
         <input type="number" min="1" max="50" placeholder="50" v-model="this.clanMembersInput" @input="this.checkClanMembers()" @touchend="this.checkClanMembers()" />
         <span v-if="this.clanMemberError" class="error-message"> Number of Clan Members must be between 1 and 50</span>
@@ -36,7 +39,7 @@
 
 <script>
 import RaidCard from "@/components/RaidCard";
-import { jsonFileNew } from "@/components/json-storage"
+import { jsonFileNew } from "@/storage/json-storage"
 
 export default {
   name: 'Select and Overview one Raid',
@@ -147,7 +150,17 @@ export default {
   border: 1px solid #eee;
   border-radius: 2px;
   padding: 1.25rem 2rem;
-  margin: 1rem 0 1.5rem 0;
+  margin-top: 1rem;
+  user-select: none;
+  overflow-x: auto;
+}
+/* input container */
+.one-raid-input {
+  font-family: sans-serif;
+  border: 1px solid #eee;
+  border-radius: 2px;
+  padding: 1.25rem 2rem;
+  margin: 1rem 0 2.5rem 0;
   user-select: none;
   overflow-x: auto;
 }
@@ -164,7 +177,7 @@ input {
   font-size: 1.5rem;
 }
 
-@media (max-width: 556px) {
+@media (max-width: 575px) {
   .one-raid-select {
     margin: .1rem 0 1rem 0;
   }
@@ -178,6 +191,9 @@ input {
 }
 @media (min-width: 1200px) {
   .one-raid-select {
+    margin-top: 1rem;
+  }
+  .one-raid-input {
     margin: 1rem 0 2.5rem 0;
   }
 }
